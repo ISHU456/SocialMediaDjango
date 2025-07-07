@@ -147,6 +147,13 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Media files configuration for production
+if not DEBUG:
+    # For Render, we'll use a temporary solution
+    # Images will work but may be lost on server restart
+    MEDIA_URL = '/media/'
+    # In a real production app, you'd use cloud storage like AWS S3 or Cloudinary
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
