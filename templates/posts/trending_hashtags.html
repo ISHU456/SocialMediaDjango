@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Trending Hashtags - Bharat Connect{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- Header -->
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <h2 class="card-title">
+                    <i class="fas fa-fire text-warning me-2"></i>
+                    Trending Hashtags
+                </h2>
+                <p class="text-muted mb-0">
+                    Discover what's popular on Bharat Connect
+                </p>
+            </div>
+        </div>
+
+        <!-- Trending Hashtags List -->
+        {% if trending_hashtags %}
+            <div class="row">
+                {% for hashtag in trending_hashtags %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100 hashtag-card">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <i class="fas fa-hashtag text-primary" style="font-size: 2rem;"></i>
+                                </div>
+                                <h5 class="card-title">
+                                    <a href="{% url 'posts:hashtag_posts' hashtag.name %}" class="text-decoration-none">
+                                        #{{ hashtag.name }}
+                                    </a>
+                                </h5>
+                                <p class="card-text text-muted">
+                                    {{ hashtag.get_posts_count }} post{{ hashtag.get_posts_count|pluralize }}
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="fas fa-chart-line me-1"></i>
+                                        Trending Score: {{ hashtag.trending_score }}
+                                    </small>
+                                    <a href="{% url 'posts:hashtag_posts' hashtag.name %}" class="btn btn-outline-primary btn-sm">
+                                        View Posts
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-fire text-muted mb-3" style="font-size: 3rem;"></i>
+                    <h5 class="card-title">No trending hashtags yet</h5>
+                    <p class="card-text text-muted">
+                        Start posting with hashtags to see them trend!
+                    </p>
+                    <a href="{% url 'posts:home' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Create Post
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <div class="sticky-top" style="top: 100px;">
+            <!-- Quick Stats -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-bar text-info me-2"></i>Quick Stats
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h4 class="text-primary">{{ trending_hashtags|length }}</h4>
+                            <small class="text-muted">Trending</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-success">
+                                {% if trending_hashtags %}
+                                    {{ trending_hashtags.0.get_posts_count }}
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </h4>
+                            <small class="text-muted">Top Posts</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- How to Use Hashtags -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle text-info me-2"></i>How to Use Hashtags
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Add # before any word in your post
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Use relevant hashtags to reach more people
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Click on hashtags to see related posts
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Popular hashtags appear in trending
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.hashtag-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border: 1px solid #e9ecef;
+}
+
+.hashtag-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.hashtag-card .card-title a {
+    color: #495057;
+    transition: color 0.2s ease-in-out;
+}
+
+.hashtag-card .card-title a:hover {
+    color: #007bff;
+}
+</style>
+{% endblock %} 

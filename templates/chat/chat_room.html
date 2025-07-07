@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Chat with {{ other_user.get_full_name|default:other_user.username }} - Bharat Connect{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-container {
+        height: 70vh;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .chat-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem;
+        border-radius: 10px 10px 0 0;
+    }
+    
+    .messages-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        max-height: 50vh;
+    }
+    
+    .message {
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: flex-start;
+    }
+    
+    .message.own {
+        flex-direction: row-reverse;
+    }
+    
+    .message-content {
+        max-width: 70%;
+        padding: 0.75rem 1rem;
+        border-radius: 18px;
+        position: relative;
+    }
+    
+    .message.own .message-content {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-bottom-right-radius: 5px;
+    }
+    
+    .message:not(.own) .message-content {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-bottom-left-radius: 5px;
+    }
+    
+    .message-time {
+        font-size: 0.75rem;
+        opacity: 0.7;
+        margin-top: 0.25rem;
+    }
+    
+    .message-input-container {
+        padding: 1rem;
+        background: white;
+        border-top: 1px solid #e9ecef;
+        border-radius: 0 0 10px 10px;
+    }
+    
+    .typing-indicator {
+        font-style: italic;
+        color: #6c757d;
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    .unread-indicator {
+        background: #007bff;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="chat-container">
+                <!-- Chat Header -->
+                <div class="chat-header d-flex align-items-center">
+                    <a href="{% url 'chat:chat_list' %}" class="text-white me-3">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <div class="flex-shrink-0">
+                        {% if other_user.profile.profile_picture %}
+                            <img src="{{ other_user.profile.profile_picture.url }}" alt="Profile" class="rounded-circle" width="40" height="40" style="object-fit: contain;">
+                        {% else %}
+                            <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-user text-white" style="font-size: 18px;"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0">{{ other_user.get_full_name|default:other_user.username }}</h6>
+                        <small class="opacity-75">@{{ other_user.username }}</small>
+                    </div>
+                    <div>
+                        <a href="{% url 'profiles:profile_view' other_user.username %}" class="btn btn-outline-light btn-sm">
+                            <i class="fas fa-user me-1"></i>Profile
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Messages Container -->
+                <div class="messages-container" id="messages-container" data-last-message-id="{% if messages.last %}{{ messages.last.id }}{% else %}0{% endif %}">
+                    <div id="unread-indicator" class="unread-indicator" style="display: none;">
+                        New messages
+                    </div>
+                    <div id="messages-list">
+                        {% for message in messages %}
+                            <div class="message {% if message.sender == user %}own{% endif %}" data-message-id="{{ message.id }}">
+                                <div class="message-content">
+                                    <div class="message-text">{{ message.content|linebreaks }}</div>
+                                    <div class="message-time">
+                                        {{ message.created_at|time:"H:i" }}
+                                        {% if message.sender == user %}
+                                            {% if message.is_read %}
+                                                <i class="fas fa-check-double text-primary ms-1"></i>
+                                            {% else %}
+                                                <i class="fas fa-check ms-1"></i>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div id="typing-indicator" class="typing-indicator" style="display: none;">
+                        {{ other_user.get_full_name|default:other_user.username }} is typing...
+                    </div>
+                </div>
+                
+                <!-- Message Input -->
+                <div class="message-input-container">
+                    <form id="message-form" data-conversation-id="{{ conversation.id }}">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <textarea class="form-control" id="message-input" name="content" rows="2" placeholder="Type your message..." maxlength="1000"></textarea>
+                            <button class="btn btn-primary" type="submit" id="send-button">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    const conversationId = {{ conversation.id }};
+    const messagesContainer = $('#messages-container');
+    const messagesList = $('#messages-list');
+    const messageForm = $('#message-form');
+    const messageInput = $('#message-input');
+    const sendButton = $('#send-button');
+    // Get the highest message ID from the initially loaded messages
+    let lastMessageId = 0;
+    $('.message').each(function() {
+        const messageId = parseInt($(this).data('message-id'));
+        if (messageId > lastMessageId) {
+            lastMessageId = messageId;
+        }
+    });
+    let isTyping = false;
+    let typingTimer;
+    
+    // Auto-scroll to bottom
+    function scrollToBottom() {
+        messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+    }
+    
+    // Send message
+    messageForm.submit(function(e) {
+        e.preventDefault();
+        
+        const content = messageInput.val().trim();
+        if (!content) return;
+        
+        // Disable form
+        sendButton.prop('disabled', true);
+        
+        $.ajax({
+            url: `/chat/send/${conversationId}/`,
+            type: 'POST',
+            data: {
+                'content': content,
+                'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+            },
+            success: function(data) {
+                if (data.success) {
+                    // Add message to chat
+                    addMessage(data, true);
+                    
+                    // Clear input
+                    messageInput.val('');
+                    
+                    // Scroll to bottom
+                    scrollToBottom();
+                }
+            },
+            error: function() {
+                alert('Failed to send message. Please try again.');
+            },
+            complete: function() {
+                sendButton.prop('disabled', false);
+            }
+        });
+    });
+    
+    // Add message to chat
+    function addMessage(data, isOwn = false) {
+        // Handle different data structures (sent vs received)
+        const messageId = data.message_id || data.id;
+        const content = data.content;
+        const createdAt = data.created_at;
+        
+        const messageHtml = `
+            <div class="message ${isOwn ? 'own' : ''}" data-message-id="${messageId}">
+                <div class="message-content">
+                    <div class="message-text">${content.replace(/\n/g, '<br>')}</div>
+                    <div class="message-time">
+                        ${createdAt}
+                        ${isOwn ? '<i class="fas fa-check ms-1"></i>' : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        messagesList.append(messageHtml);
+        lastMessageId = messageId;
+    }
+    
+    // Check for new messages
+    function checkNewMessages() {
+        $.ajax({
+            url: `/chat/messages/${conversationId}/`,
+            type: 'GET',
+            data: {
+                'last_message_id': lastMessageId
+            },
+            success: function(data) {
+                if (data.messages.length > 0) {
+                    let hasNewMessages = false;
+                    
+                    data.messages.forEach(function(message) {
+                        // Check if message already exists to prevent duplicates
+                        if (!$(`[data-message-id="${message.id}"]`).length) {
+                            addMessage(message, message.is_own);
+                            hasNewMessages = true;
+                        }
+                    });
+                    
+                    if (hasNewMessages) {
+                        // Update lastMessageId to the highest message ID
+                        const maxId = Math.max.apply(null, data.messages.map(function(m) { return m.id; }));
+                        if (maxId > lastMessageId) {
+                            lastMessageId = maxId;
+                        }
+                        
+                        // Show unread indicator if not at bottom
+                        if (messagesContainer.scrollTop() + messagesContainer.height() < messagesContainer[0].scrollHeight - 100) {
+                            $('#unread-indicator').show();
+                        } else {
+                            scrollToBottom();
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Handle scroll to show/hide unread indicator
+    messagesContainer.scroll(function() {
+        if (messagesContainer.scrollTop() + messagesContainer.height() >= messagesContainer[0].scrollHeight - 100) {
+            $('#unread-indicator').hide();
+        }
+    });
+    
+    // Click unread indicator to scroll to bottom
+    $('#unread-indicator').click(function() {
+        scrollToBottom();
+        $(this).hide();
+    });
+    
+    // Typing indicator
+    messageInput.on('input', function() {
+        if (!isTyping) {
+            isTyping = true;
+            // Send typing indicator (you can implement this later)
+        }
+        
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(function() {
+            isTyping = false;
+            // Hide typing indicator
+        }, 1000);
+    });
+    
+    // Initial scroll to bottom
+    scrollToBottom();
+    
+    // Check for new messages every 3 seconds, but start after a delay to prevent immediate duplicate loading
+    setTimeout(function() {
+        setInterval(checkNewMessages, 3000);
+    }, 2000);
+    
+    // Focus on input
+    messageInput.focus();
+});
+</script>
+{% endblock %} 

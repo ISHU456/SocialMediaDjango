@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search Users - Bharat Connect{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-search me-2"></i>Search Users to Chat
+                </h4>
+            </div>
+            <div class="card-body">
+                <!-- Search Form -->
+                <form method="get" class="mb-4">
+                    <div class="input-group">
+                        <input type="text" name="q" class="form-control" placeholder="Search by username, first name, or last name..." value="{{ query }}">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+
+                {% if query %}
+                    {% if users %}
+                        <div class="mb-3">
+                            <p class="text-muted">Found {{ users|length }} user{{ users|length|pluralize }}</p>
+                        </div>
+                        
+                        <div class="row">
+                            {% for user in users %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0">
+                                                    {% if user.profile.profile_picture %}
+                                                        <img src="{{ user.profile.profile_picture.url }}" alt="Profile" class="rounded-circle" width="60" height="60" style="object-fit: contain;">
+                                                    {% else %}
+                                                        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                                            <i class="fas fa-user text-white" style="font-size: 24px;"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <h6 class="mb-1">{{ user.get_full_name|default:user.username }}</h6>
+                                                    <p class="text-muted mb-1">@{{ user.username }}</p>
+                                                    {% if user.profile.bio %}
+                                                        <p class="text-muted small mb-2">{{ user.profile.bio|truncatechars:50 }}</p>
+                                                    {% endif %}
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <small class="text-muted">
+                                                            {{ user.profile.get_followers_count }} followers
+                                                        </small>
+                                                        <a href="{% url 'chat:start_conversation' user.username %}" class="btn btn-primary btn-sm">
+                                                            <i class="fas fa-comment me-1"></i>Message
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No users found</h5>
+                            <p class="text-muted">Try searching with different keywords.</p>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Search for users</h5>
+                        <p class="text-muted">Enter a username, first name, or last name to find users to chat with.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

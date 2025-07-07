@@ -1,0 +1,698 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bharat Connect{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    <style>
+        /* Professional Navbar Styles */
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            padding: 0.3rem 0;
+            transition: all 0.3s ease;
+            min-height: 50px;
+        }
+        
+        .navbar-brand {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: white !important;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .navbar-brand:hover {
+            color: #f8f9fa !important;
+            transform: translateY(-1px);
+        }
+        
+        .navbar-brand i {
+            font-size: 1.3rem;
+            margin-right: 0.5rem;
+            color: #ffd700;
+        }
+        
+        .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            font-weight: 500;
+            padding: 0.3rem 0.6rem !important;
+            border-radius: 8px;
+            margin: 0 0.25rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .nav-link:hover {
+            color: white !important;
+            background-color: rgba(255,255,255,0.1);
+            transform: translateY(-1px);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(255,255,255,0.2);
+            color: white !important;
+        }
+        
+        .navbar-toggler {
+            border: none;
+            padding: 0.25rem 0.5rem;
+        }
+        
+        .navbar-toggler:focus {
+            box-shadow: none;
+        }
+        
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.9%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+        
+        /* Search Bar Styling */
+        .navbar-search {
+            position: relative;
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        .navbar-search .form-control {
+            background-color: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 25px;
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-search .form-control::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .navbar-search .form-control:focus {
+            background-color: rgba(255,255,255,0.25);
+            border-color: rgba(255,255,255,0.4);
+            box-shadow: 0 0 0 0.2rem rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .navbar-search .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.7);
+            z-index: 10;
+        }
+        
+        .navbar-search .btn {
+            position: absolute;
+            right: 0.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 20px;
+            padding: 0.375rem 0.75rem;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-search .btn:hover {
+            background-color: rgba(255,255,255,0.3);
+            transform: translateY(-50%) scale(1.05);
+        }
+        
+        /* Notification Badge */
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: 2px solid white;
+            border-radius: 50%;
+            min-width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        /* User Profile Dropdown */
+        .user-profile-link {
+            display: flex;
+            align-items: center;
+            padding: 0.4rem 0.8rem;
+            color: rgba(255,255,255,0.9) !important;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            background-color: rgba(255,255,255,0.1);
+            position: relative;
+            overflow: visible;
+        }
+        
+        .user-profile-link:hover {
+            background-color: rgba(255,255,255,0.2);
+            color: white !important;
+            transform: translateY(-1px);
+        }
+        
+        .user-profile-link img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            display: block;
+        }
+        
+        .user-profile-link i {
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        /* Profile Icon Link Styling */
+        .profile-icon-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-radius: 50%;
+            padding: 2px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .profile-icon-link:hover {
+            background-color: rgba(255,255,255,0.2);
+            transform: scale(1.05);
+        }
+        
+        .profile-icon-link img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            display: block;
+        }
+        
+        .profile-icon-link i {
+            font-size: 28px;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        /* Default Profile Picture */
+        .default-profile-pic {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            font-size: 12px;
+        }
+        
+        .default-profile-pic.large {
+            width: 80px;
+            height: 80px;
+            font-size: 32px;
+        }
+        
+        .default-profile-pic.medium {
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+        }
+        
+        .default-profile-pic.small {
+            width: 35px;
+            height: 35px;
+            font-size: 14px;
+        }
+        
+        /* Upload Button Styles */
+        .upload-btn-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .upload-btn-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .upload-btn {
+            transition: all 0.3s ease;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .upload-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .upload-btn:active {
+            transform: translateY(0);
+        }
+        
+        #file-preview {
+            transition: all 0.3s ease;
+        }
+        
+        #file-preview.show {
+            display: block !important;
+        }
+        
+        /* Dropdown Styling */
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 0.5rem 0;
+            margin-top: 0.5rem;
+        }
+        
+        .dropdown-item {
+            padding: 0.75rem 1.5rem;
+            color: #495057;
+            transition: all 0.2s ease;
+            border-radius: 0;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+            color: #212529;
+            transform: translateX(5px);
+        }
+        
+        .dropdown-item i {
+            width: 20px;
+            text-align: center;
+            margin-right: 0.5rem;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 991.98px) {
+            .navbar-search {
+                margin: 1rem 0;
+                max-width: 100%;
+            }
+            
+            .nav-link {
+                margin: 0.25rem 0;
+                padding: 0.75rem 1rem !important;
+            }
+            
+            .user-profile-link {
+                margin: 0.5rem 0;
+            }
+            
+            /* Increase top margin for main content on mobile */
+            main.container {
+                margin-top: 4rem !important;
+                padding-top: 1.5rem !important;
+            }
+            
+            /* Landing page margin on mobile */
+            .hero-section {
+                margin-top: 50px;
+            }
+        }
+        
+        /* Extra small devices */
+        @media (max-width: 575.98px) {
+            main.container {
+                margin-top: 5rem !important;
+                padding-top: 2rem !important;
+            }
+            
+            /* Landing page margin on extra small devices */
+            .hero-section {
+                margin-top: 45px;
+            }
+        }
+        
+        /* Sticky sidebar positioning for feed page */
+        .sticky-top {
+            z-index: 1020;
+        }
+        
+        /* Ensure proper spacing for sticky elements below navbar */
+        .navbar + .container-fluid .sticky-top {
+            top: 80px !important;
+        }
+        
+        /* Landing page margin from navbar */
+        .hero-section {
+            margin-top: 60px;
+        }
+        
+        /* Specific styling for feed page sidebars */
+        .container-fluid .row .col-lg-3 .sticky-top {
+            top: 80px !important;
+            z-index: 1020;
+            transition: top 0.3s ease;
+        }
+        
+        /* Ensure smooth scrolling behavior */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Profile Image Clickable Styles */
+        .profile-image-clickable {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .profile-image-clickable:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        /* Profile image link hover effect */
+        a:hover .profile-image-clickable {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        /* Default profile picture hover effect */
+        .default-profile-pic.profile-image-clickable:hover {
+            background: linear-gradient(135deg, #667eea, #764ba2) !important;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        /* Icon profile picture hover effect */
+        .fas.fa-user-circle.profile-image-clickable:hover {
+            color: #667eea !important;
+            transform: scale(1.1);
+        }
+        
+        /* Auth Buttons */
+        .auth-buttons .btn {
+            border-radius: 25px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .auth-buttons .btn-outline-light {
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+        }
+        
+        .auth-buttons .btn-outline-light:hover {
+            background-color: white;
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        .auth-buttons .btn-light {
+            background-color: white;
+            color: #667eea;
+            border: 2px solid white;
+        }
+        
+        .auth-buttons .btn-light:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <!-- Brand -->
+            <a class="navbar-brand" href="{% url 'landing' %}">
+                <i class="fas fa-globe"></i>Bharat Connect
+            </a>
+            
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Navbar Content -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                {% if user.is_authenticated %}
+                    <!-- Main Navigation -->
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'posts:home' %}">
+                                <i class="fas fa-home me-1"></i>Feed
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'suggested_users' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'profiles:suggested_users' %}">
+                                <i class="fas fa-users me-1"></i>Discover
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link position-relative {% if 'chat' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'chat:chat_list' %}">
+                                <i class="fas fa-comments me-1"></i>Messages
+                                <span class="chat-badge badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle" style="display: none; font-size: 0.6rem;">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'trending_hashtags' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'posts:trending_hashtags' %}">
+                                <i class="fas fa-fire me-1"></i>Trending
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <!-- Search Bar -->
+                    <div class="navbar-search mx-auto">
+                        <form method="GET" action="{% url 'posts:search_posts' %}" class="d-flex">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" name="q" class="form-control" placeholder="Search posts, users..." value="{{ request.GET.q }}">
+                            <button type="submit" class="btn">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Right Side Navigation -->
+                    <ul class="navbar-nav">
+                        <!-- Notifications -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link position-relative" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-bell me-1"></i>
+                                <span class="notification-badge" id="notification-badge" style="display: none;">0</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationsDropdown">
+                                <li><h6 class="dropdown-header">Notifications</h6></li>
+                                <li><a class="dropdown-item" href="{% url 'posts:notifications' %}">
+                                    <i class="fas fa-bell me-2"></i>View All Notifications
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'posts:notifications' %}">
+                                    <i class="fas fa-cog me-2"></i>Notification Settings
+                                </a></li>
+                            </ul>
+                        </li>
+                        
+                        <!-- User Profile -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link user-profile-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                            {% if user.profile.profile_picture and user.profile.profile_picture.url %}
+                                <img src="{{ user.profile.profile_picture.url }}" alt="Profile" class="rounded-circle me-2" />
+                            {% else %}
+                                <div class="rounded-circle bg-white d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                                    <i class="fas fa-user text-primary" style="font-size: 14px;"></i>
+                                </div>
+                            {% endif %}
+                                <span class="d-none d-md-inline">{{ user.get_full_name|default:user.username }}</span>
+                                <i class="fas fa-chevron-down ms-1"></i>
+                            </a>
+                            
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><h6 class="dropdown-header">Account</h6></li>
+                                <li><a class="dropdown-item" href="{% url 'profiles:profile_view' user.username %}">
+                                    <i class="fas fa-user me-2"></i>My Profile
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'profiles:profile_edit' %}">
+                                    <i class="fas fa-edit me-2"></i>Edit Profile
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'profiles:followers_list' user.username %}">
+                                    <i class="fas fa-users me-2"></i>My Followers
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'profiles:following_list' user.username %}">
+                                    <i class="fas fa-user-friends me-2"></i>Following
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'account_logout' %}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                {% else %}
+                    <!-- Right Side Navigation for Non-Authenticated Users -->
+                    <ul class="navbar-nav ms-auto">
+                        <!-- Authentication Buttons -->
+                        <li class="nav-item me-2">
+                            <a class="btn btn-outline-light" href="{% url 'account_login' %}">
+                                <i class="fas fa-sign-in-alt me-1"></i>Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-light" href="{% url 'account_signup' %}">
+                                <i class="fas fa-user-plus me-1"></i>Sign Up
+                            </a>
+                        </li>
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="{% if request.resolver_match.url_name == 'landing' %}container-fluid p-0{% else %}container mt-5 pt-4{% endif %}">
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-muted py-4 mt-5">
+        <div class="container">
+            <p>&copy; 2024 Bharat Connect. All rights reserved. | Created by Ishu Anand Malviya</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- CSRF Token -->
+    <script>
+        // Get CSRF token from cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Set up CSRF token for AJAX requests
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                }
+            }
+        });
+        
+        // Navbar scroll effect
+        $(window).scroll(function() {
+            if ($(window).scrollTop() > 50) {
+                $('.navbar').addClass('scrolled');
+            } else {
+                $('.navbar').removeClass('scrolled');
+            }
+        });
+        
+        // Update notification badge
+        function updateNotificationBadge() {
+            $.ajax({
+                url: '/home/notifications/',
+                type: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function(data) {
+                    if (data.unread_count > 0) {
+                        $('#notification-badge').text(data.unread_count).show();
+                    } else {
+                        $('#notification-badge').hide();
+                    }
+                }
+            });
+        }
+        
+        // Update notification badge on page load
+        updateNotificationBadge();
+        
+        // Update notification badge every 30 seconds
+        setInterval(updateNotificationBadge, 30000);
+        
+        // Update chat badge
+        function updateChatBadge() {
+            $.ajax({
+                url: '/chat/unread-count/',
+                type: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function(data) {
+                    if (data.total_unread > 0) {
+                        $('.chat-badge').text(data.total_unread).show();
+                    } else {
+                        $('.chat-badge').hide();
+                    }
+                }
+            });
+        }
+        
+        // Update chat badge on page load
+        updateChatBadge();
+        
+        // Update chat badge every 10 seconds
+        setInterval(updateChatBadge, 10000);
+    </script>
+    <!-- Custom JS -->
+    <script src="{% static 'js/main.js' %}"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

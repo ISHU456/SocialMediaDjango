@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search Users - SocialSphere{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-search me-2"></i>Search Users
+                    {% if query %}
+                        for "{{ query }}"
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="card-body">
+                <!-- Search Form -->
+                <form method="get" class="mb-4">
+                    <div class="input-group">
+                        <input type="text" name="q" class="form-control" placeholder="Search by username, name, or email..." value="{{ query }}">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+
+                {% if query %}
+                    {% if page_obj %}
+                        <div class="mb-3">
+                            <p class="text-muted">Found {{ page_obj.paginator.count }} user{{ page_obj.paginator.count|pluralize }}</p>
+                        </div>
+                        
+                        <div class="row">
+                            {% for user in page_obj %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0">
+                                                    <a href="{% url 'profiles:profile_view' user.username %}" class="text-decoration-none">
+                                                        {% if user.profile.profile_picture %}
+                                                            <img src="{{ user.profile.profile_picture.url }}" alt="Profile" class="rounded-circle profile-image-clickable" width="60" height="60">
+                                                        {% else %}
+                                                            <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center profile-image-clickable" style="width: 60px; height: 60px;">
+                                                                <i class="fas fa-user text-white" style="font-size: 24px;"></i>
+                                                            </div>
+                                                        {% endif %}
+                                                    </a>
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <h6 class="mb-1">
+                                                        <a href="{% url 'profiles:profile_view' user.username %}" class="text-decoration-none">
+                                                            {{ user.get_full_name|default:user.username }}
+                                                        </a>
+                                                    </h6>
+                                                    <p class="text-muted mb-1">@{{ user.username }}</p>
+                                                    {% if user.profile.bio %}
+                                                        <p class="text-muted small mb-2">{{ user.profile.bio|truncatechars:50 }}</p>
+                                                    {% endif %}
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <small class="text-muted">
+                                                            {{ user.profile.get_followers_count }} followers
+                                                        </small>
+                                                        <div class="d-flex gap-1">
+                                                            <a href="{% url 'profiles:profile_view' user.username %}" class="btn btn-primary btn-sm">
+                                                                <i class="fas fa-user me-1"></i>View Profile
+                                                            </a>
+                                                            <a href="{% url 'chat:start_conversation' user.username %}" class="btn btn-outline-success btn-sm">
+                                                                <i class="fas fa-comment me-1"></i>Message
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Users pagination">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?q={{ query }}&page={{ page_obj.previous_page_number }}">Previous</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?q={{ query }}&page={{ num }}">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?q={{ query }}&page={{ page_obj.next_page_number }}">Next</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No users found</h5>
+                            <p class="text-muted">Try searching with different keywords.</p>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Enter a search term</h5>
+                        <p class="text-muted">Search for users by username, name, or email.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

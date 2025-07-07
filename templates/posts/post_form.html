@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if post %}Edit Post{% else %}Create Post{% endif %} - SocialSphere
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>
+                    {% if post %}Edit Post{% else %}Create New Post{% endif %}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        {{ form.content|as_crispy_field }}
+                        <div class="form-text">
+                            <i class="fas fa-hashtag text-primary me-1"></i>
+                            <small class="text-muted">
+                                Add hashtags to your post by typing # followed by a word (e.g., #technology #fun)
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex gap-2">
+                            <!-- Image Upload Button -->
+                            <div class="upload-btn-wrapper">
+                                <button type="button" class="btn btn-outline-primary upload-btn" onclick="document.getElementById('{{ form.image.id_for_label }}').click();">
+                                    <i class="fas fa-image me-2"></i>Add Photo
+                                </button>
+                                {{ form.image }}
+                            </div>
+                            
+                            <!-- Video Upload Button -->
+                            <div class="upload-btn-wrapper">
+                                <button type="button" class="btn btn-outline-success upload-btn" onclick="document.getElementById('{{ form.video.id_for_label }}').click();">
+                                    <i class="fas fa-video me-2"></i>Add Video
+                                </button>
+                                {{ form.video }}
+                            </div>
+                            
+                            <!-- File Preview Area -->
+                            <div id="file-preview" class="flex-grow-1 d-none">
+                                <div class="d-flex align-items-center p-2 bg-light rounded">
+                                    <i class="fas fa-file me-2 text-primary"></i>
+                                    <span id="file-name" class="small"></span>
+                                    <button type="button" class="btn btn-sm btn-outline-danger ms-auto" onclick="clearFile()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Popular Hashtag Suggestions -->
+                    <div class="mb-3">
+                        <small class="text-muted mb-2 d-block">
+                            <i class="fas fa-lightbulb text-warning me-1"></i>Popular hashtags:
+                        </small>
+                        <div class="d-flex flex-wrap gap-1">
+                            <button type="button" class="btn btn-outline-primary btn-sm hashtag-suggestion" data-hashtag="#technology">
+                                #technology
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm hashtag-suggestion" data-hashtag="#fun">
+                                #fun
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm hashtag-suggestion" data-hashtag="#life">
+                                #life
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm hashtag-suggestion" data-hashtag="#love">
+                                #love
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm hashtag-suggestion" data-hashtag="#food">
+                                #food
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm hashtag-suggestion" data-hashtag="#travel">
+                                #travel
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm hashtag-suggestion" data-hashtag="#music">
+                                #music
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm hashtag-suggestion" data-hashtag="#photography">
+                                #photography
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            {{ form.is_public }}
+                            <label class="form-check-label" for="{{ form.is_public.id_for_label }}">
+                                Make this post public
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'posts:home' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i>
+                            {% if post %}Update Post{% else %}Create Post{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Character counter for content
+    $('#id_content').on('input', function() {
+        var maxLength = 1000;
+        var currentLength = $(this).val().length;
+        var counter = $(this).siblings('.char-counter');
+        
+        if (counter.length === 0) {
+            counter = $('<small class="char-counter text-muted"></small>');
+            $(this).after(counter);
+        }
+        
+        counter.text(currentLength + '/' + maxLength);
+        
+        if (currentLength > maxLength * 0.9) {
+            counter.addClass('text-warning');
+        } else {
+            counter.removeClass('text-warning');
+        }
+        
+        if (currentLength > maxLength) {
+            counter.addClass('text-danger');
+        } else {
+            counter.removeClass('text-danger');
+        }
+    });
+
+    // File upload functionality
+    function handleFileSelect(input, fileType) {
+        const file = input.files[0];
+        if (file) {
+            // Show file preview
+            const preview = document.getElementById('file-preview');
+            const fileName = document.getElementById('file-name');
+            const fileIcon = preview.querySelector('i');
+            
+            fileName.textContent = file.name;
+            
+            // Update icon based on file type
+            if (fileType === 'image') {
+                fileIcon.className = 'fas fa-image me-2 text-primary';
+            } else if (fileType === 'video') {
+                fileIcon.className = 'fas fa-video me-2 text-success';
+            }
+            
+            preview.classList.remove('d-none');
+            preview.classList.add('show');
+            
+            // Update button text to show selected file
+            const button = input.previousElementSibling;
+            const icon = button.querySelector('i');
+            const text = button.querySelector('span') || button.lastChild;
+            
+            if (fileType === 'image') {
+                icon.className = 'fas fa-image me-2';
+                if (text.nodeType === Node.TEXT_NODE) {
+                    text.textContent = 'Photo Selected';
+                }
+            } else if (fileType === 'video') {
+                icon.className = 'fas fa-video me-2';
+                if (text.nodeType === Node.TEXT_NODE) {
+                    text.textContent = 'Video Selected';
+                }
+            }
+            
+            button.classList.remove('btn-outline-primary', 'btn-outline-success');
+            button.classList.add('btn-success');
+        }
+    }
+    
+    function clearFile() {
+        // Clear all file inputs
+        document.querySelectorAll('input[type="file"]').forEach(input => {
+            input.value = '';
+        });
+        
+        // Hide file preview
+        const preview = document.getElementById('file-preview');
+        preview.classList.add('d-none');
+        preview.classList.remove('show');
+        
+        // Reset button texts
+        const imageBtn = document.querySelector('.upload-btn-wrapper:first-child .upload-btn');
+        const videoBtn = document.querySelector('.upload-btn-wrapper:last-child .upload-btn');
+        
+        if (imageBtn) {
+            imageBtn.innerHTML = '<i class="fas fa-image me-2"></i>Add Photo';
+            imageBtn.className = 'btn btn-outline-primary upload-btn';
+        }
+        
+        if (videoBtn) {
+            videoBtn.innerHTML = '<i class="fas fa-video me-2"></i>Add Video';
+            videoBtn.className = 'btn btn-outline-success upload-btn';
+        }
+    }
+    
+    // Hashtag suggestion functionality
+    $('.hashtag-suggestion').click(function() {
+        const hashtag = $(this).data('hashtag');
+        const contentField = $('#{{ form.content.id_for_label }}');
+        const currentValue = contentField.val();
+        
+        // Add hashtag to the end of the content with a space if needed
+        if (currentValue && !currentValue.endsWith(' ')) {
+            contentField.val(currentValue + ' ' + hashtag);
+        } else {
+            contentField.val(currentValue + hashtag);
+        }
+        
+        // Focus back to the content field
+        contentField.focus();
+        
+        // Add visual feedback
+        $(this).addClass('btn-primary').removeClass('btn-outline-primary');
+        setTimeout(() => {
+            $(this).removeClass('btn-primary').addClass('btn-outline-primary');
+        }, 500);
+    });
+    
+    // Add event listeners for file inputs
+    const imageInput = document.getElementById('{{ form.image.id_for_label }}');
+    const videoInput = document.getElementById('{{ form.video.id_for_label }}');
+    
+    if (imageInput) {
+        imageInput.addEventListener('change', function() {
+            handleFileSelect(this, 'image');
+        });
+    }
+    
+    if (videoInput) {
+        videoInput.addEventListener('change', function() {
+            handleFileSelect(this, 'video');
+        });
+    }
+});
+</script>
+{% endblock %} 

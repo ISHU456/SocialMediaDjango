@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notifications - SocialSphere{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-bell me-2 text-primary"></i>Notifications
+                    </h2>
+                    <p class="text-muted mb-0">
+                        {% if unread_count > 0 %}
+                            {{ unread_count }} unread notification{{ unread_count|pluralize }}
+                        {% else %}
+                            All caught up!
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'posts:home' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Feed
+                    </a>
+                </div>
+            </div>
+
+            <!-- Notifications List -->
+            {% if notifications %}
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-0">
+                        {% for notification in notifications %}
+                            <div class="notification-item p-4 border-bottom {% if not notification.is_read %}bg-light{% endif %}" data-notification-id="{{ notification.pk }}">
+                                <div class="d-flex align-items-start">
+                                    <!-- Notification Icon -->
+                                    <div class="flex-shrink-0 me-3">
+                                        {% if notification.notification_type == 'like' %}
+                                            <div class="rounded-circle bg-danger d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                                <i class="fas fa-heart text-white"></i>
+                                            </div>
+                                        {% elif notification.notification_type == 'comment' %}
+                                            <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                                <i class="fas fa-comment text-white"></i>
+                                            </div>
+                                        {% elif notification.notification_type == 'follow' %}
+                                            <div class="rounded-circle bg-success d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                                <i class="fas fa-user-plus text-white"></i>
+                                            </div>
+                                        {% elif notification.notification_type == 'share' %}
+                                            <div class="rounded-circle bg-info d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                                <i class="fas fa-share text-white"></i>
+                                            </div>
+                                        {% else %}
+                                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                                <i class="fas fa-bell text-white"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Notification Content -->
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <!-- Sender Profile Picture -->
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <a href="{% url 'profiles:profile_view' notification.sender.username %}" class="text-decoration-none">
+                                                        {% if notification.sender.profile.profile_picture %}
+                                                            <img src="{{ notification.sender.profile.profile_picture.url }}" alt="Profile" class="rounded-circle me-2 profile-image-clickable" width="32" height="32" style="object-fit: contain; width: 32px; height: 32px;">
+                                                        {% else %}
+                                                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-2 profile-image-clickable" style="width: 32px; height: 32px;">
+                                                                <i class="fas fa-user text-white" style="font-size: 12px;"></i>
+                                                            </div>
+                                                        {% endif %}
+                                                    </a>
+                                                    
+                                                    <div>
+                                                        <h6 class="mb-0">
+                                                            <a href="{% url 'profiles:profile_view' notification.sender.username %}" class="text-decoration-none fw-bold">
+                                                                {{ notification.sender.get_full_name|default:notification.sender.username }}
+                                                            </a>
+                                                        </h6>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-clock me-1"></i>{{ notification.created_at|timesince }} ago
+                                                        </small>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Notification Message -->
+                                                <p class="mb-2">
+                                                    {% if notification.notification_type == 'like' %}
+                                                        {% if notification.post %}
+                                                            liked your post
+                                                            {% if notification.post.content %}
+                                                                "{{ notification.post.content|truncatechars:50 }}"
+                                                            {% endif %}
+                                                        {% else %}
+                                                            liked your content
+                                                        {% endif %}
+                                                    {% elif notification.notification_type == 'comment' %}
+                                                        {% if notification.comment %}
+                                                            commented on your post: "{{ notification.comment.content|truncatechars:50 }}"
+                                                        {% else %}
+                                                            commented on your post
+                                                        {% endif %}
+                                                    {% elif notification.notification_type == 'follow' %}
+                                                        started following you
+                                                    {% elif notification.notification_type == 'share' %}
+                                                        shared your post
+                                                    {% else %}
+                                                        {{ notification.get_message }}
+                                                    {% endif %}
+                                                </p>
+
+                                                <!-- Action Buttons -->
+                                                <div class="d-flex gap-2">
+                                                    {% if notification.post %}
+                                                        <a href="{% url 'posts:post_detail' notification.post.pk %}" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-eye me-1"></i>View Post
+                                                        </a>
+                                                    {% endif %}
+                                                    {% if notification.notification_type == 'follow' %}
+                                                        <a href="{% url 'profiles:profile_view' notification.sender.username %}" class="btn btn-sm btn-outline-success">
+                                                            <i class="fas fa-user me-1"></i>View Profile
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+
+                                            <!-- Unread Indicator -->
+                                            {% if not notification.is_read %}
+                                                <div class="flex-shrink-0">
+                                                    <div class="bg-primary rounded-circle" style="width: 12px; height: 12px;"></div>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Mark All as Read Button -->
+                {% if unread_count > 0 %}
+                    <div class="text-center mt-4">
+                        <button class="btn btn-outline-secondary" id="mark-all-read">
+                            <i class="fas fa-check-double me-2"></i>Mark All as Read
+                        </button>
+                    </div>
+                {% endif %}
+
+            {% else %}
+                <!-- Empty State -->
+                <div class="text-center py-5">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-5">
+                            <i class="fas fa-bell-slash fa-4x text-muted mb-4"></i>
+                            <h4 class="text-muted mb-3">No notifications yet</h4>
+                            <p class="text-muted mb-4">When you get notifications, they'll appear here.</p>
+                            <a href="{% url 'posts:home' %}" class="btn btn-primary">
+                                <i class="fas fa-home me-2"></i>Go to Feed
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Mark individual notification as read when clicked
+    $('.notification-item').click(function() {
+        var notificationId = $(this).data('notification-id');
+        var item = $(this);
+        
+        $.ajax({
+            url: '/home/notifications/',
+            type: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            data: {
+                'notification_id': notificationId,
+                'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+            },
+            success: function(data) {
+                // Remove unread indicator
+                item.removeClass('bg-light');
+                item.find('.bg-primary.rounded-circle').remove();
+                
+                // Update unread count
+                updateUnreadCount();
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+            }
+        });
+    });
+
+    // Mark all as read
+    $('#mark-all-read').click(function() {
+        var btn = $(this);
+        var originalText = btn.html();
+        
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Marking...');
+        
+        $.ajax({
+            url: '/home/notifications/',
+            type: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            data: {
+                'mark_all_read': true,
+                'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+            },
+            success: function(data) {
+                // Remove all unread indicators
+                $('.notification-item').removeClass('bg-light');
+                $('.bg-primary.rounded-circle').remove();
+                
+                // Update unread count
+                updateUnreadCount();
+                
+                // Hide the button
+                btn.parent().fadeOut();
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                btn.prop('disabled', false).html(originalText);
+            }
+        });
+    });
+
+    function updateUnreadCount() {
+        var unreadCount = $('.notification-item.bg-light').length;
+        if (unreadCount === 0) {
+            $('.text-muted').text('All caught up!');
+        } else {
+            $('.text-muted').text(unreadCount + ' unread notification' + (unreadCount > 1 ? 's' : ''));
+        }
+    }
+});
+</script>
+{% endblock %} 

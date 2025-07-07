@@ -1,0 +1,1087 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Home - SocialSphere{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Left Sidebar - User Stats & Quick Actions -->
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="sticky-top" style="top: 80px;">
+                <!-- User Profile Card -->
+                <div class="card mb-4 shadow-sm border-0">
+                    <div class="card-body text-center p-4">
+                        <div class="position-relative mb-3">
+                            {% if user.profile.profile_picture and user.profile.profile_picture.url %}
+                                <img src="{{ user.profile.profile_picture.url }}" alt="Profile" class="rounded-circle" width="80" height="80" style="object-fit: contain; width: 80px; height: 80px;">
+                            {% else %}
+                                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto" style="width: 80px; height: 80px;">
+                                    <i class="fas fa-user text-white" style="font-size: 32px;"></i>
+                                </div>
+                            {% endif %}
+                            <div class="position-absolute bottom-0 end-0">
+                                <div class="bg-success rounded-circle" style="width: 20px; height: 20px; border: 3px solid white;"></div>
+                            </div>
+                        </div>
+                        <h5 class="mb-1">{{ user.get_full_name|default:user.username }}</h5>
+                        <p class="text-muted small mb-3">@{{ user.username }}</p>
+                        
+                        <!-- Stats Row -->
+                        <div class="row text-center mb-3">
+                            <div class="col-4">
+                                <div class="border-end">
+                                    <h6 class="mb-0 fw-bold text-primary">{{ user.profile.get_posts_count }}</h6>
+                                    <small class="text-muted">Posts</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border-end">
+                                    <h6 class="mb-0 fw-bold text-success">{{ user.profile.get_followers_count }}</h6>
+                                    <small class="text-muted">Followers</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <h6 class="mb-0 fw-bold text-info">{{ user.profile.get_following_count }}</h6>
+                                <small class="text-muted">Following</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Actions -->
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'profiles:profile_edit' %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-edit me-2"></i>Edit Profile
+                            </a>
+                            <a href="{% url 'profiles:suggested_users' %}" class="btn btn-outline-success btn-sm">
+                                <i class="fas fa-users me-2"></i>Find People
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Followers -->
+                <div class="card mb-4 shadow-sm border-0">
+                    <div class="card-header bg-transparent border-0">
+                        <h6 class="mb-0">
+                            <i class="fas fa-users me-2 text-primary"></i>Recent Followers
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        {% for follower in user.profile.followers.all|slice:":5" %}
+                            <div class="d-flex align-items-center p-3 border-bottom">
+                                <div class="flex-shrink-0">
+                                    <a href="{% url 'profiles:profile_view' follower.user.username %}" class="text-decoration-none">
+                                                                            {% if follower.user.profile.profile_picture and follower.user.profile.profile_picture.url %}
+                                        <img src="{{ follower.user.profile.profile_picture.url }}" alt="Profile" class="rounded-circle profile-image-clickable" width="40" height="40" style="object-fit: contain; width: 40px; height: 40px;">
+                                    {% else %}
+                                        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center profile-image-clickable" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-user text-white" style="font-size: 14px;"></i>
+                                        </div>
+                                    {% endif %}
+                                    </a>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0 small">
+                                        <a href="{% url 'profiles:profile_view' follower.user.username %}" class="text-decoration-none">
+                                            {{ follower.user.get_full_name|default:follower.user.username }}
+                                        </a>
+                                    </h6>
+                                    <small class="text-muted">@{{ follower.user.username }}</small>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-users fa-2x text-muted mb-2"></i>
+                                <p class="text-muted small mb-0">No followers yet</p>
+                            </div>
+                        {% endfor %}
+                        {% if user.profile.get_followers_count > 5 %}
+                            <div class="text-center p-3">
+                                <a href="{% url 'profiles:followers_list' user.username %}" class="btn btn-link btn-sm text-primary">
+                                    View all followers
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Trending Hashtags -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-transparent border-0">
+                        <h6 class="mb-0">
+                            <i class="fas fa-fire me-2 text-danger"></i>Trending Hashtags
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if trending_hashtags %}
+                            <div class="list-group list-group-flush">
+                                {% for hashtag in trending_hashtags %}
+                                    <a href="{% url 'posts:hashtag_posts' hashtag.name %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+                                        <span class="text-truncate">#{{ hashtag.name }}</span>
+                                        <span class="badge bg-primary rounded-pill">{{ hashtag.get_posts_count }}</span>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                            <div class="mt-3">
+                                <a href="{% url 'posts:trending_hashtags' %}" class="btn btn-outline-primary btn-sm w-100">
+                                    View All Trending
+                                </a>
+                            </div>
+                        {% else %}
+                            <p class="text-muted small mb-0">No trending hashtags yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-6">
+            <!-- Create Post Card -->
+            <div class="card mb-4 shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if user.profile.profile_picture and user.profile.profile_picture.url %}
+                            <img src="{{ user.profile.profile_picture.url }}" alt="Profile" class="rounded-circle me-3" width="50" height="50" style="object-fit: contain; width: 50px; height: 50px;">
+                        {% else %}
+                            <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                <i class="fas fa-user text-white" style="font-size: 20px;"></i>
+                            </div>
+                        {% endif %}
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">{{ user.get_full_name|default:user.username }}</h6>
+                            <small class="text-muted">Share what's on your mind...</small>
+                        </div>
+                    </div>
+                    
+                    <form method="post" enctype="multipart/form-data" id="post-form">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {{ post_form.content|as_crispy_field }}
+                            <div class="form-text">
+                                <i class="fas fa-hashtag text-primary me-1"></i>
+                                <small class="text-muted">
+                                    Add hashtags to your post by typing # followed by a word (e.g., #technology #fun)
+                                </small>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex gap-2">
+                                <!-- Image Upload Button -->
+                                <div class="upload-btn-wrapper">
+                                    <button type="button" class="btn btn-outline-primary upload-btn" onclick="document.getElementById('{{ post_form.image.id_for_label }}').click();">
+                                        <i class="fas fa-image me-2"></i>Add Photo
+                                    </button>
+                                    {{ post_form.image }}
+                                </div>
+                                
+                                <!-- Video Upload Button -->
+                                <div class="upload-btn-wrapper">
+                                    <button type="button" class="btn btn-outline-success upload-btn" onclick="document.getElementById('{{ post_form.video.id_for_label }}').click();">
+                                        <i class="fas fa-video me-2"></i>Add Video
+                                    </button>
+                                    {{ post_form.video }}
+                                </div>
+                                
+                                <!-- File Preview Area -->
+                                <div id="file-preview" class="flex-grow-1 d-none">
+                                    <div class="d-flex align-items-center p-2 bg-light rounded">
+                                        <i class="fas fa-file me-2 text-primary"></i>
+                                        <span id="file-name" class="small"></span>
+                                        <button type="button" class="btn btn-sm btn-outline-danger ms-auto" onclick="clearFile()">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Popular Hashtag Suggestions -->
+                        <div class="mb-3">
+                            <small class="text-muted mb-2 d-block">
+                                <i class="fas fa-lightbulb text-warning me-1"></i>Popular hashtags:
+                            </small>
+                            <div class="d-flex flex-wrap gap-1">
+                                <button type="button" class="btn btn-outline-primary btn-sm hashtag-suggestion" data-hashtag="#technology">
+                                    #technology
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm hashtag-suggestion" data-hashtag="#fun">
+                                    #fun
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm hashtag-suggestion" data-hashtag="#life">
+                                    #life
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm hashtag-suggestion" data-hashtag="#love">
+                                    #love
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm hashtag-suggestion" data-hashtag="#food">
+                                    #food
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm hashtag-suggestion" data-hashtag="#travel">
+                                    #travel
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm hashtag-suggestion" data-hashtag="#music">
+                                    #music
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm hashtag-suggestion" data-hashtag="#photography">
+                                    #photography
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="form-check">
+                                {{ post_form.is_public }}
+                                <label class="form-check-label" for="{{ post_form.is_public.id_for_label }}">
+                                    <i class="fas fa-globe me-1"></i>Make this post public
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-paper-plane me-2"></i>Post
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Posts Feed -->
+            {% if page_obj %}
+                {% for post in page_obj %}
+                    <div class="card mb-4 shadow-sm border-0 post-card">
+                        <div class="card-header bg-transparent border-0 p-4 pb-0">
+                            <div class="d-flex align-items-center">
+                                <a href="{% url 'profiles:profile_view' post.user.username %}" class="text-decoration-none">
+                                                                    {% if post.user.profile.profile_picture and post.user.profile.profile_picture.url %}
+                                    <img src="{{ post.user.profile.profile_picture.url }}" alt="Profile" class="rounded-circle me-3" width="50" height="50" style="object-fit: contain; width: 50px; height: 50px;">
+                                {% else %}
+                                    <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                        <i class="fas fa-user text-white" style="font-size: 20px;"></i>
+                                    </div>
+                                {% endif %}
+                                </a>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">
+                                        <a href="{% url 'profiles:profile_view' post.user.username %}" class="text-decoration-none text-dark fw-bold">
+                                            {{ post.user.get_full_name|default:post.user.username }}
+                                        </a>
+                                    </h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>{{ post.created_at|timesince }} ago
+                                        {% if not post.is_public %}
+                                            <i class="fas fa-lock ms-2 text-warning" title="Private post"></i>
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                {% if post.user == user %}
+                                    <div class="dropdown">
+                                        <button class="btn btn-link text-muted" type="button" data-bs-toggle="dropdown">
+                                            <i class="fas fa-ellipsis-h"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="{% url 'posts:post_update' post.pk %}">
+                                                <i class="fas fa-edit me-2"></i>Edit
+                                            </a></li>
+                                            <li><a class="dropdown-item text-danger" href="{% url 'posts:post_delete' post.pk %}">
+                                                <i class="fas fa-trash me-2"></i>Delete
+                                            </a></li>
+                                        </ul>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="card-body px-4">
+                            {% if post.content %}
+                                <p class="card-text mb-3">{{ post.content|linebreaks }}</p>
+                            {% endif %}
+                            
+                            <!-- Hashtags -->
+                            {% if post.hashtags.all %}
+                                <div class="mb-3">
+                                    {% for hashtag in post.hashtags.all %}
+                                        <a href="{% url 'posts:hashtag_posts' hashtag.name %}" class="badge bg-primary text-decoration-none me-1">
+                                            #{{ hashtag.name }}
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            
+                            {% if post.image %}
+                                <div class="position-relative mb-3">
+                                    <img src="{{ post.image.url }}" alt="Post image" class="img-fluid rounded" style="max-height: 400px; object-fit: contain; width: 100%; border-radius: 8px;">
+                                    <div class="position-absolute top-0 start-0 m-2">
+                                        <span class="badge bg-dark bg-opacity-75">
+                                            <i class="fas fa-image me-1"></i>Photo
+                                        </span>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if post.video %}
+                                <div class="position-relative mb-3">
+                                    <video controls class="w-100 rounded post-video" style="max-height: 400px; object-fit: contain; border-radius: 8px;">
+                                        <source src="{{ post.video.url }}" type="video/mp4">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                    <div class="position-absolute top-0 start-0 m-2">
+                                        <span class="badge bg-dark bg-opacity-75">
+                                            <i class="fas fa-video me-1"></i>Video
+                                        </span>
+                                    </div>
+                                    <div class="position-absolute top-50 start-50 translate-middle video-center-play" style="pointer-events: none;">
+                                        <div class="bg-dark bg-opacity-50 rounded-circle p-3">
+                                            <i class="fas fa-play text-white" style="font-size: 24px;"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="card-footer bg-transparent border-0 px-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex gap-3">
+                                    <button class="btn btn-link text-decoration-none like-btn p-0" data-post-id="{{ post.pk }}">
+                                        {% if user in post.likes.all %}
+                                            <i class="fas fa-heart text-danger me-1"></i>
+                                        {% else %}
+                                            <i class="far fa-heart me-1"></i>
+                                        {% endif %}
+                                        <span class="likes-count fw-bold">{{ post.get_likes_count }}</span>
+                                    </button>
+                                    <button class="btn btn-link text-decoration-none comment-btn p-0" data-post-id="{{ post.pk }}" data-bs-toggle="collapse" data-bs-target="#comments-{{ post.pk }}">
+                                        <i class="far fa-comment me-1"></i>
+                                        <span class="comments-count-{{ post.pk }} fw-bold">{{ post.get_comments_count }}</span>
+                                    </button>
+                                    <a href="{% url 'posts:share_post' post.pk %}" class="btn btn-link text-decoration-none p-0">
+                                        <i class="fas fa-share me-1"></i>
+                                        <span class="fw-bold">{{ post.get_share_count }}</span>
+                                    </a>
+                                </div>
+                                <a href="{% url 'posts:post_detail' post.pk %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-external-link-alt me-1"></i>View
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Comments Section -->
+                        <div class="collapse" id="comments-{{ post.pk }}">
+                            <div class="card-body border-top bg-light">
+                                <!-- Add Comment Form -->
+                                <form method="post" action="{% url 'posts:comment_create' post.pk %}" class="mb-3 comment-form" data-post-id="{{ post.pk }}">
+                                    {% csrf_token %}
+                                    <div class="input-group">
+                                        <textarea name="content" class="form-control" rows="2" placeholder="Write a comment..." required></textarea>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-paper-plane"></i>
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <!-- Comments List -->
+                                <div class="comments-list-{{ post.pk }}">
+                                    {% for comment in post.comments.all|slice:":5" %}
+                                        <div class="d-flex mb-3">
+                                            <div class="flex-shrink-0">
+                                                <a href="{% url 'profiles:profile_view' comment.user.username %}" class="text-decoration-none">
+                                                                                        {% if comment.user.profile.profile_picture %}
+                                        <img src="{{ comment.user.profile.profile_picture.url }}" alt="Profile" class="rounded-circle profile-image-clickable" width="35" height="35" style="object-fit: contain; width: 35px; height: 35px;">
+                                    {% else %}
+                                        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center profile-image-clickable" style="width: 35px; height: 35px;">
+                                            <i class="fas fa-user text-white" style="font-size: 14px;"></i>
+                                        </div>
+                                    {% endif %}
+                                                </a>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <div class="bg-white rounded p-3 shadow-sm">
+                                                    <div class="d-flex justify-content-between align-items-start">
+                                                        <div>
+                                                            <small class="fw-bold">
+                                                                <a href="{% url 'profiles:profile_view' comment.user.username %}" class="text-decoration-none">
+                                                                    {{ comment.user.get_full_name|default:comment.user.username }}
+                                                                </a>
+                                                            </small>
+                                                            <p class="mb-2 small">{{ comment.content }}</p>
+                                                            <div class="d-flex align-items-center">
+                                                                <button class="btn btn-link text-decoration-none p-0 me-3 comment-like-btn" data-comment-id="{{ comment.pk }}">
+                                                                    {% if user in comment.likes.all %}
+                                                                        <i class="fas fa-heart text-danger" style="font-size: 12px;"></i>
+                                                                    {% else %}
+                                                                        <i class="far fa-heart" style="font-size: 12px;"></i>
+                                                                    {% endif %}
+                                                                    <span class="comment-likes-count-{{ comment.pk }}" style="font-size: 12px;">{{ comment.get_likes_count }}</span>
+                                                                </button>
+                                                                <small class="text-muted">
+                                                                    <i class="fas fa-clock me-1"></i>{{ comment.created_at|timesince }} ago
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                        {% if comment.user == user %}
+                                                            <div class="dropdown">
+                                                                <button class="btn btn-link text-muted btn-sm p-0" type="button" data-bs-toggle="dropdown">
+                                                                    <i class="fas fa-ellipsis-h"></i>
+                                                                </button>
+                                                                <ul class="dropdown-menu">
+                                                                    <li><a class="dropdown-item text-danger delete-comment" href="#" data-comment-id="{{ comment.pk }}">
+                                                                        <i class="fas fa-trash me-2"></i>Delete
+                                                                    </a></li>
+                                                                </ul>
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                    {% if post.comments.count > 5 %}
+                                        <div class="text-center">
+                                            <a href="{% url 'posts:post_detail' post.pk %}" class="btn btn-link btn-sm">
+                                                View all {{ post.comments.count }} comments
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                    <nav aria-label="Posts pagination" class="mb-4">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-5">
+                            <i class="fas fa-newspaper fa-4x text-muted mb-4"></i>
+                            <h4 class="text-muted mb-3">No posts yet</h4>
+                            <p class="text-muted mb-4">Follow some users to see their posts here!</p>
+                            <a href="{% url 'profiles:suggested_users' %}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-users me-2"></i>Discover People
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Sidebar - Following & Suggestions -->
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="sticky-top" style="top: 80px;">
+                <!-- Following List -->
+                <div class="card mb-4 shadow-sm border-0">
+                    <div class="card-header bg-transparent border-0">
+                        <h6 class="mb-0">
+                            <i class="fas fa-user-friends me-2 text-success"></i>Following
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        {% for following in user.profile.following.all|slice:":5" %}
+                            <div class="d-flex align-items-center p-3 border-bottom">
+                                <div class="flex-shrink-0">
+                                    <a href="{% url 'profiles:profile_view' following.user.username %}" class="text-decoration-none">
+                                        {% if following.user.profile.profile_picture %}
+                                            <img src="{{ following.user.profile.profile_picture.url }}" alt="Profile" class="rounded-circle profile-image-clickable" width="40" height="40" style="object-fit: contain; width: 40px; height: 40px;">
+                                        {% else %}
+                                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center profile-image-clickable" style="width: 40px; height: 40px;">
+                                                <i class="fas fa-user text-white"></i>
+                                            </div>
+                                        {% endif %}
+                                    </a>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0 small">
+                                        <a href="{% url 'profiles:profile_view' following.user.username %}" class="text-decoration-none">
+                                            {{ following.user.get_full_name|default:following.user.username }}
+                                        </a>
+                                    </h6>
+                                    <small class="text-muted">@{{ following.user.username }}</small>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-user-friends fa-2x text-muted mb-2"></i>
+                                <p class="text-muted small mb-0">Not following anyone yet</p>
+                            </div>
+                        {% endfor %}
+                        {% if user.profile.get_following_count > 5 %}
+                            <div class="text-center p-3">
+                                <a href="{% url 'profiles:following_list' user.username %}" class="btn btn-link btn-sm text-success">
+                                    View all following
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Suggested Users -->
+                <div class="card mb-4 shadow-sm border-0">
+                    <div class="card-header bg-transparent border-0">
+                        <h6 class="mb-0">
+                            <i class="fas fa-lightbulb me-2 text-warning"></i>Suggested for You
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        {% for suggested_user in suggested_users|slice:":3" %}
+                            <div class="d-flex align-items-center p-3 border-bottom">
+                                <div class="flex-shrink-0">
+                                    <a href="{% url 'profiles:profile_view' suggested_user.username %}" class="text-decoration-none">
+                                        {% if suggested_user.profile.profile_picture %}
+                                            <img src="{{ suggested_user.profile.profile_picture.url }}" alt="Profile" class="rounded-circle profile-image-clickable" width="40" height="40" style="object-fit: contain; width: 40px; height: 40px;">
+                                        {% else %}
+                                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center profile-image-clickable" style="width: 40px; height: 40px;">
+                                                <i class="fas fa-user text-white"></i>
+                                            </div>
+                                        {% endif %}
+                                    </a>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0 small">
+                                        <a href="{% url 'profiles:profile_view' suggested_user.username %}" class="text-decoration-none">
+                                            {{ suggested_user.get_full_name|default:suggested_user.username }}
+                                        </a>
+                                    </h6>
+                                    <small class="text-muted">@{{ suggested_user.username }}</small>
+                                </div>
+                                <button class="btn btn-outline-primary btn-sm follow-btn" data-user-id="{{ suggested_user.pk }}">
+                                    Follow
+                                </button>
+                            </div>
+                        {% empty %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-lightbulb fa-2x text-muted mb-2"></i>
+                                <p class="text-muted small mb-0">No suggestions available</p>
+                            </div>
+                        {% endfor %}
+                        <div class="text-center p-3">
+                            <a href="{% url 'profiles:suggested_users' %}" class="btn btn-link btn-sm text-primary">
+                                See more suggestions
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trending Hashtags -->
+                <div class="card mb-4 shadow-sm border-0">
+                    <div class="card-header bg-transparent border-0">
+                        <h6 class="mb-0">
+                            <i class="fas fa-fire me-2 text-danger"></i>Trending Hashtags
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if trending_hashtags %}
+                            <div class="list-group list-group-flush">
+                                {% for hashtag in trending_hashtags %}
+                                    <a href="{% url 'posts:hashtag_posts' hashtag.name %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+                                        <span class="text-truncate">#{{ hashtag.name }}</span>
+                                        <span class="badge bg-primary rounded-pill">{{ hashtag.get_posts_count }}</span>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                            <div class="mt-3">
+                                <a href="{% url 'posts:trending_hashtags' %}" class="btn btn-outline-primary btn-sm w-100">
+                                    View All Trending
+                                </a>
+                            </div>
+                        {% else %}
+                            <p class="text-muted small mb-0">No trending hashtags yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-transparent border-0">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chart-bar me-2 text-info"></i>Your Activity
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border-end">
+                                    <h5 class="mb-0 text-primary">{{ user.liked_posts.count }}</h5>
+                                    <small class="text-muted">Likes Given</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <h5 class="mb-0 text-success">{{ user.post_set.count }}</h5>
+                                <small class="text-muted">Posts Created</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Like functionality
+    $('.like-btn').click(function(e) {
+        e.preventDefault();
+        var postId = $(this).data('post-id');
+        var btn = $(this);
+        
+        $.ajax({
+            url: '/home/post/' + postId + '/like/',
+            type: 'POST',
+            data: {
+                'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+            },
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(data) {
+                var icon = btn.find('i');
+                var count = btn.find('.likes-count');
+                
+                if (data.liked) {
+                    icon.removeClass('far').addClass('fas text-danger');
+                } else {
+                    icon.removeClass('fas text-danger').addClass('far');
+                }
+                
+                count.text(data.likes_count);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                console.error('Status:', status);
+                console.error('Response:', xhr.responseText);
+                
+                var errorMessage = 'An error occurred. Please try again.';
+                
+                // Check if it's a CSRF error
+                if (xhr.status === 403) {
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.error) {
+                            errorMessage = response.error;
+                        } else {
+                            errorMessage = 'Session expired. Please refresh the page and try again.';
+                        }
+                    } catch (e) {
+                        errorMessage = 'Session expired. Please refresh the page and try again.';
+                    }
+                } else if (xhr.status === 404) {
+                    errorMessage = 'Post not found. Please refresh the page.';
+                } else if (xhr.status === 500) {
+                    errorMessage = 'Server error. Please try again later.';
+                }
+                
+                // Use a more reliable way to show the alert
+                setTimeout(function() {
+                    window.alert(errorMessage);
+                }, 100);
+            }
+        });
+    });
+
+    // Comment functionality - toggle comments section
+    $('.comment-btn').click(function(e) {
+        e.preventDefault();
+        // The collapse functionality is handled by Bootstrap
+    });
+
+    // Comment form submission with AJAX
+    $('.comment-form').submit(function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var postId = form.data('post-id');
+        var textarea = form.find('textarea');
+        var submitBtn = form.find('button[type="submit"]');
+        var originalText = submitBtn.html();
+        var content = textarea.val().trim();
+        
+        if (!content) {
+            return;
+        }
+        
+        // Disable button and show loading state
+        submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+        
+        $.ajax({
+            url: '/home/post/' + postId + '/comment/',
+            type: 'POST',
+            data: {
+                'content': content,
+                'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+            },
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(data) {
+                // Clear the textarea
+                textarea.val('');
+                
+                // Add the new comment to the list
+                var commentsList = $('.comments-list-' + postId);
+                var newComment = `
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                                <i class="fas fa-user text-white" style="font-size: 14px;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="bg-white rounded p-3 shadow-sm">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <small class="fw-bold">You</small>
+                                        <p class="mb-2 small">${content}</p>
+                                        <div class="d-flex align-items-center">
+                                            <button class="btn btn-link text-decoration-none p-0 me-3 comment-like-btn" data-comment-id="${data.comment_id}">
+                                                <i class="far fa-heart" style="font-size: 12px;"></i>
+                                                <span class="comment-likes-count-${data.comment_id}" style="font-size: 12px;">0</span>
+                                            </button>
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>Just now
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="dropdown">
+                                        <button class="btn btn-link text-muted btn-sm p-0" type="button" data-bs-toggle="dropdown">
+                                            <i class="fas fa-ellipsis-h"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item text-danger delete-comment" href="#" data-comment-id="${data.comment_id}">
+                                                <i class="fas fa-trash me-2"></i>Delete
+                                            </a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                commentsList.prepend(newComment);
+                
+                // Update comment count
+                var currentCount = parseInt($('.comments-count-' + postId).text()) || 0;
+                $('.comments-count-' + postId).text(currentCount + 1);
+                
+                // Show success message
+                if (data.message) {
+                    console.log(data.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                console.error('Status:', status);
+                console.error('Response:', xhr.responseText);
+                
+                var errorMessage = 'There was an error adding your comment. Please try again.';
+                
+                if (xhr.status === 403) {
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.error) {
+                            errorMessage = response.error;
+                        } else {
+                            errorMessage = 'Session expired. Please refresh the page and try again.';
+                        }
+                    } catch (e) {
+                        errorMessage = 'Session expired. Please refresh the page and try again.';
+                    }
+                }
+                
+                // Use a more reliable way to show the alert
+                setTimeout(function() {
+                    window.alert(errorMessage);
+                }, 100);
+            },
+            complete: function() {
+                // Re-enable button
+                submitBtn.prop('disabled', false).html(originalText);
+            }
+        });
+    });
+
+    // Comment like functionality
+    $(document).on('click', '.comment-like-btn', function(e) {
+        e.preventDefault();
+        var commentId = $(this).data('comment-id');
+        var btn = $(this);
+        
+        $.ajax({
+            url: '/home/comment/' + commentId + '/like/',
+            type: 'POST',
+            data: {
+                'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+            },
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(data) {
+                var icon = btn.find('i');
+                var count = btn.find('.comment-likes-count-' + commentId);
+                
+                if (data.liked) {
+                    icon.removeClass('far').addClass('fas text-danger');
+                } else {
+                    icon.removeClass('fas text-danger').addClass('far');
+                }
+                
+                count.text(data.likes_count);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                console.error('Status:', status);
+                console.error('Response:', xhr.responseText);
+                
+                var errorMessage = 'There was an error processing your like. Please try again.';
+                
+                // Check if it's a CSRF error
+                if (xhr.status === 403) {
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.error) {
+                            errorMessage = response.error;
+                        } else {
+                            errorMessage = 'Session expired. Please refresh the page and try again.';
+                        }
+                    } catch (e) {
+                        errorMessage = 'Session expired. Please refresh the page and try again.';
+                    }
+                } else if (xhr.status === 404) {
+                    errorMessage = 'Comment not found. Please refresh the page.';
+                } else if (xhr.status === 500) {
+                    errorMessage = 'Server error. Please try again later.';
+                }
+                
+                // Use a more reliable way to show the alert
+                setTimeout(function() {
+                    window.alert(errorMessage);
+                }, 100);
+            }
+        });
+    });
+
+    // Delete comment functionality
+    $(document).on('click', '.delete-comment', function(e) {
+        e.preventDefault();
+        var commentId = $(this).data('comment-id');
+        var commentElement = $(this).closest('.d-flex');
+        var postId = commentElement.closest('.card').find('.comment-btn').data('post-id');
+        
+        if (confirm('Are you sure you want to delete this comment?')) {
+            $.ajax({
+                url: '/home/comment/' + commentId + '/delete/',
+                type: 'POST',
+                data: {
+                    'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+                },
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function(data) {
+                    commentElement.remove();
+                    
+                    // Update comment count
+                    var currentCount = parseInt($('.comments-count-' + postId).text()) || 0;
+                    $('.comments-count-' + postId).text(Math.max(0, currentCount - 1));
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    var errorMessage = 'There was an error deleting the comment. Please try again.';
+                    
+                    // Use a more reliable way to show the alert
+                    setTimeout(function() {
+                        window.alert(errorMessage);
+                    }, 100);
+                }
+            });
+        }
+    });
+
+    // Follow button functionality
+    $('.follow-btn').click(function(e) {
+        e.preventDefault();
+        var btn = $(this);
+        var userId = btn.data('user-id');
+        
+        $.ajax({
+            url: '/profiles/follow/' + userId + '/',
+            type: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(data) {
+                if (data.following) {
+                    btn.removeClass('btn-outline-primary').addClass('btn-primary').text('Following');
+                } else {
+                    btn.removeClass('btn-primary').addClass('btn-outline-primary').text('Follow');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+            }
+        });
+    });
+
+    // File upload functionality
+    function handleFileSelect(input, fileType) {
+        const file = input.files[0];
+        if (file) {
+            // Show file preview
+            const preview = document.getElementById('file-preview');
+            const fileName = document.getElementById('file-name');
+            const fileIcon = preview.querySelector('i');
+            
+            fileName.textContent = file.name;
+            
+            // Update icon based on file type
+            if (fileType === 'image') {
+                fileIcon.className = 'fas fa-image me-2 text-primary';
+            } else if (fileType === 'video') {
+                fileIcon.className = 'fas fa-video me-2 text-success';
+            }
+            
+            preview.classList.remove('d-none');
+            preview.classList.add('show');
+            
+            // Update button text to show selected file
+            const button = input.previousElementSibling;
+            const icon = button.querySelector('i');
+            const text = button.querySelector('span') || button.lastChild;
+            
+            if (fileType === 'image') {
+                icon.className = 'fas fa-image me-2';
+                if (text.nodeType === Node.TEXT_NODE) {
+                    text.textContent = 'Photo Selected';
+                }
+            } else if (fileType === 'video') {
+                icon.className = 'fas fa-video me-2';
+                if (text.nodeType === Node.TEXT_NODE) {
+                    text.textContent = 'Video Selected';
+                }
+            }
+            
+            button.classList.remove('btn-outline-primary', 'btn-outline-success');
+            button.classList.add('btn-success');
+        }
+    }
+    
+    function clearFile() {
+        // Clear all file inputs
+        document.querySelectorAll('input[type="file"]').forEach(input => {
+            input.value = '';
+        });
+        
+        // Hide file preview
+        const preview = document.getElementById('file-preview');
+        preview.classList.add('d-none');
+        preview.classList.remove('show');
+        
+        // Reset button texts
+        const imageBtn = document.querySelector('.upload-btn-wrapper:first-child .upload-btn');
+        const videoBtn = document.querySelector('.upload-btn-wrapper:last-child .upload-btn');
+        
+        if (imageBtn) {
+            imageBtn.innerHTML = '<i class="fas fa-image me-2"></i>Add Photo';
+            imageBtn.className = 'btn btn-outline-primary upload-btn';
+        }
+        
+        if (videoBtn) {
+            videoBtn.innerHTML = '<i class="fas fa-video me-2"></i>Add Video';
+            videoBtn.className = 'btn btn-outline-success upload-btn';
+        }
+    }
+    
+    // Hashtag suggestion functionality
+    $('.hashtag-suggestion').click(function() {
+        const hashtag = $(this).data('hashtag');
+        const contentField = $('#{{ post_form.content.id_for_label }}');
+        const currentValue = contentField.val();
+        
+        // Add hashtag to the end of the content with a space if needed
+        if (currentValue && !currentValue.endsWith(' ')) {
+            contentField.val(currentValue + ' ' + hashtag);
+        } else {
+            contentField.val(currentValue + hashtag);
+        }
+        
+        // Focus back to the content field
+        contentField.focus();
+        
+        // Add visual feedback
+        $(this).addClass('btn-primary').removeClass('btn-outline-primary');
+        setTimeout(() => {
+            $(this).removeClass('btn-primary').addClass('btn-outline-primary');
+        }, 500);
+    });
+    
+    // Add event listeners for file inputs
+    document.addEventListener('DOMContentLoaded', function() {
+        const imageInput = document.getElementById('{{ post_form.image.id_for_label }}');
+        const videoInput = document.getElementById('{{ post_form.video.id_for_label }}');
+        
+        if (imageInput) {
+            imageInput.addEventListener('change', function() {
+                handleFileSelect(this, 'image');
+            });
+        }
+        
+        if (videoInput) {
+            videoInput.addEventListener('change', function() {
+                handleFileSelect(this, 'video');
+            });
+        }
+    });
+
+    // Hide/show play overlay on video play/pause
+    $(".post-video").each(function() {
+        var video = this;
+        var overlay = $(video).closest('.position-relative').find('.video-center-play');
+        // Initial state
+        if (!video.paused) {
+            overlay.hide();
+        }
+        $(video).on('play', function() {
+            overlay.hide();
+        });
+        $(video).on('pause', function() {
+            overlay.show();
+        });
+        // Show overlay on ended
+        $(video).on('ended', function() {
+            overlay.show();
+        });
+    });
+});
+</script>
+{% endblock %} 

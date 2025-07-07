@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search Results - SocialSphere{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-search me-2"></i>Search Results
+                    {% if query %}
+                        for "{{ query }}"
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if query %}
+                    {% if page_obj %}
+                        <div class="mb-3">
+                            <p class="text-muted">Found {{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }}</p>
+                        </div>
+                        
+                        {% for post in page_obj %}
+                            <div class="card mb-3 post-card">
+                                <div class="card-header d-flex align-items-center">
+                                    <a href="{% url 'profiles:profile_view' post.user.username %}" class="text-decoration-none">
+                                        {% if post.user.profile.profile_picture %}
+                                            <img src="{{ post.user.profile.profile_picture.url }}" alt="Profile" class="rounded-circle me-2" width="40" height="40">
+                                        {% else %}
+                                            <i class="fas fa-user-circle me-2" style="font-size: 40px; color: #6c757d;"></i>
+                                        {% endif %}
+                                    </a>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0">
+                                            <a href="{% url 'profiles:profile_view' post.user.username %}" class="text-decoration-none text-dark">
+                                                {{ post.user.get_full_name|default:post.user.username }}
+                                            </a>
+                                        </h6>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>{{ post.created_at|timesince }} ago
+                                            {% if not post.is_public %}
+                                                <i class="fas fa-lock ms-2" title="Private post"></i>
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <div class="card-body">
+                                    {% if post.content %}
+                                        <p class="card-text">{{ post.content|linebreaks }}</p>
+                                    {% endif %}
+                                    
+                                    {% if post.image %}
+                                        <img src="{{ post.image.url }}" alt="Post image" class="img-fluid rounded mb-3">
+                                    {% endif %}
+                                    
+                                    {% if post.video %}
+                                        <video controls class="w-100 rounded mb-3">
+                                            <source src="{{ post.video.url }}" type="video/mp4">
+                                            Your browser does not support the video tag.
+                                        </video>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="card-footer">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="d-flex">
+                                            <button class="btn btn-link text-decoration-none like-btn" data-post-id="{{ post.pk }}">
+                                                {% if user in post.likes.all %}
+                                                    <i class="fas fa-heart text-danger"></i>
+                                                {% else %}
+                                                    <i class="far fa-heart"></i>
+                                                {% endif %}
+                                                <span class="likes-count">{{ post.get_likes_count }}</span>
+                                            </button>
+                                            <button class="btn btn-link text-decoration-none">
+                                                <i class="far fa-comment"></i>
+                                                <span>{{ post.get_comments_count }}</span>
+                                            </button>
+                                            <a href="{% url 'posts:share_post' post.pk %}" class="btn btn-link text-decoration-none">
+                                                <i class="fas fa-share"></i>
+                                                <span>{{ post.get_share_count }}</span>
+                                            </a>
+                                        </div>
+                                        <a href="{% url 'posts:post_detail' post.pk %}" class="btn btn-link text-decoration-none">
+                                            <i class="fas fa-external-link-alt"></i> View
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Search results pagination">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?q={{ query }}&page={{ page_obj.previous_page_number }}">Previous</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?q={{ query }}&page={{ num }}">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?q={{ query }}&page={{ page_obj.next_page_number }}">Next</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No results found</h5>
+                            <p class="text-muted">Try searching with different keywords or browse the feed.</p>
+                            <a href="{% url 'posts:home' %}" class="btn btn-primary">
+                                <i class="fas fa-home me-2"></i>Go to Feed
+                            </a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Enter a search term</h5>
+                        <p class="text-muted">Search for posts or users to get started.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Like functionality
+    $('.like-btn').click(function(e) {
+        e.preventDefault();
+        var postId = $(this).data('post-id');
+        var btn = $(this);
+        
+        $.ajax({
+            url: '/post/' + postId + '/like/',
+            type: 'POST',
+            data: {
+                'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+            },
+            success: function(data) {
+                var icon = btn.find('i');
+                var count = btn.find('.likes-count');
+                
+                if (data.liked) {
+                    icon.removeClass('far').addClass('fas text-danger');
+                } else {
+                    icon.removeClass('fas text-danger').addClass('far');
+                }
+                
+                count.text(data.likes_count);
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 

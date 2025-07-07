@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}#{{ hashtag.name }} - Bharat Connect{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- Hashtag Header -->
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <h2 class="card-title">
+                    <i class="fas fa-hashtag text-primary me-2"></i>
+                    #{{ hashtag.name }}
+                </h2>
+                <p class="text-muted mb-0">
+                    {{ page_obj.paginator.count }} post{{ page_obj.paginator.count|pluralize }}
+                </p>
+                <small class="text-muted">
+                    Created {{ hashtag.created_at|timesince }} ago
+                </small>
+            </div>
+        </div>
+
+        <!-- Posts -->
+        {% if page_obj %}
+            {% for post in page_obj %}
+                <div class="card mb-3 post-card">
+                    <div class="card-header bg-transparent border-0">
+                        <div class="d-flex align-items-center">
+                            <a href="{% url 'profiles:profile_view' post.user.username %}" class="text-decoration-none">
+                                {% if post.user.profile.profile_picture %}
+                                    <img src="{{ post.user.profile.profile_picture.url }}" alt="Profile" class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
+                                {% else %}
+                                    <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user text-white" style="font-size: 18px;"></i>
+                                    </div>
+                                {% endif %}
+                            </a>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0">
+                                    <a href="{% url 'profiles:profile_view' post.user.username %}" class="text-decoration-none text-dark">
+                                        {{ post.user.get_full_name|default:post.user.username }}
+                                    </a>
+                                </h6>
+                                <small class="text-muted">@{{ post.user.username }} • {{ post.created_at|timesince }} ago</small>
+                            </div>
+                            {% if post.user == user %}
+                                <div class="dropdown">
+                                    <button class="btn btn-link text-muted" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-h"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="{% url 'posts:post_update' post.pk %}">
+                                            <i class="fas fa-edit me-2"></i>Edit
+                                        </a></li>
+                                        <li><a class="dropdown-item text-danger" href="{% url 'posts:post_delete' post.pk %}">
+                                            <i class="fas fa-trash me-2"></i>Delete
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <p class="card-text">{{ post.content|linebreaks }}</p>
+                        
+                        <!-- Hashtags -->
+                        {% if post.hashtags.all %}
+                            <div class="mb-3">
+                                {% for hashtag in post.hashtags.all %}
+                                    <a href="{% url 'posts:hashtag_posts' hashtag.name %}" class="badge bg-primary text-decoration-none me-1">
+                                        #{{ hashtag.name }}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Media Content -->
+                        {% if post.image %}
+                            <div class="position-relative mb-3">
+                                <img src="{{ post.image.url }}" alt="Post image" class="img-fluid rounded">
+                                <div class="position-absolute top-0 end-0 m-2">
+                                    <span class="badge bg-dark bg-opacity-75">
+                                        <i class="fas fa-image me-1"></i>Image
+                                    </span>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        {% if post.video %}
+                            <div class="position-relative mb-3">
+                                <video controls class="img-fluid rounded">
+                                    <source src="{{ post.video.url }}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                                <div class="position-absolute top-0 end-0 m-2">
+                                    <span class="badge bg-dark bg-opacity-75">
+                                        <i class="fas fa-play me-1"></i>Video
+                                    </span>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Post Actions -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex gap-3">
+                                <button class="btn btn-link text-muted like-btn" data-post-id="{{ post.pk }}">
+                                    <i class="fas fa-heart {% if user in post.likes.all %}text-danger{% endif %}"></i>
+                                    <span class="likes-count">{{ post.get_likes_count }}</span>
+                                </button>
+                                <a href="{% url 'posts:post_detail' post.pk %}" class="btn btn-link text-muted">
+                                    <i class="fas fa-comment"></i>
+                                    <span>{{ post.get_comments_count }}</span>
+                                </a>
+                                <a href="{% url 'posts:share_post' post.pk %}" class="btn btn-link text-muted">
+                                    <i class="fas fa-share"></i>
+                                    <span>{{ post.get_share_count }}</span>
+                                </a>
+                            </div>
+                            <a href="{% url 'posts:post_detail' post.pk %}" class="btn btn-outline-primary btn-sm">
+                                View Post
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-hashtag text-muted mb-3" style="font-size: 3rem;"></i>
+                    <h5 class="card-title">No posts found</h5>
+                    <p class="card-text text-muted">
+                        No posts with #{{ hashtag.name }} found. Be the first to post with this hashtag!
+                    </p>
+                    <a href="{% url 'posts:home' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Create Post
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <div class="sticky-top" style="top: 100px;">
+            <!-- Trending Hashtags -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-fire text-warning me-2"></i>Trending Hashtags
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for hashtag in trending_hashtags %}
+                            <a href="{% url 'posts:hashtag_posts' hashtag.name %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                <span>#{{ hashtag.name }}</span>
+                                <span class="badge bg-primary rounded-pill">{{ hashtag.get_posts_count }}</span>
+                            </a>
+                        {% empty %}
+                            <p class="text-muted mb-0">No trending hashtags yet.</p>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3">
+                        <a href="{% url 'posts:trending_hashtags' %}" class="btn btn-outline-primary btn-sm w-100">
+                            View All Trending
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Like functionality
+    $('.like-btn').click(function() {
+        const postId = $(this).data('post-id');
+        const btn = $(this);
+        const icon = btn.find('i');
+        const countSpan = btn.find('.likes-count');
+        
+        $.ajax({
+            url: `/posts/post/${postId}/like/`,
+            type: 'POST',
+            data: {
+                'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+            },
+            success: function(data) {
+                if (data.liked) {
+                    icon.removeClass('text-muted').addClass('text-danger');
+                } else {
+                    icon.removeClass('text-danger').addClass('text-muted');
+                }
+                countSpan.text(data.likes_count);
+            },
+            error: function(xhr) {
+                if (xhr.status === 403) {
+                    alert('You don\'t have permission to like this post.');
+                } else {
+                    alert('Failed to like post. Please try again.');
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 
